@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Enigma</title>
+</head>
+
+<body>
+    <div id="contents" style="height:500px;overflow:auto;"></div>
+    <div>
+        <input type="text" id="sensorId" />
+        <a href="javascript:;" onclick="register()">注册</a>
+        <input type="text" id="msg"></input>
+        <a href="javascript:;" onclick="cancellation()">注销</a>
+        <a href="javascript:;" onclick="broadcast()">广播</a>
+    </div>
+    <script type="text/javascript">
+        var sensorId = '';
+        var ws;
+        function broadcast() {
+            ws.send(document.getElementById('msg').value);
+        }
+        function register() {
+            var xmlhttp;
+            sensorId = document.getElementById('sensorId').value;
+            if (window.XMLHttpRequest) {
+                // IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+                xmlhttp = new XMLHttpRequest();
+            }
+            else {
+                // IE6, IE5 浏览器执行代码
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    console.log('success! register')
+                    ws = new WebSocket("ws://localhost:8000/sensor/" + sensorId);
+                    ws.onmessage = function (e) {
+                        var content = document.getElementById("contents")
+                        content.append("<p>" + e.data + "</p>");
+                    }
+                }else{
+                    console.log('error!')
+                }
+            }
+            xmlhttp.open("GET", "/register/" + sensorId, true);
+            xmlhttp.send();
+        }
+    </script>
+</body>
+
+</html>
