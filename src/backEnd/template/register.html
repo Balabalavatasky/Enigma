@@ -12,14 +12,19 @@
         <input type="text" id="sensorId" />
         <a href="javascript:;" onclick="register()">注册</a>
         <input type="text" id="msg"></input>
-        <a href="javascript:;" onclick="cancellation()">注销</a>
+        <!-- <a href="javascript:;" onclick="cancellation()">注销</a> -->
         <a href="javascript:;" onclick="broadcast()">广播</a>
     </div>
     <script type="text/javascript">
         var sensorId = '';
         var ws;
         function broadcast() {
-            ws.send(document.getElementById('msg').value);
+            if(ws&&ws.readyState==WebSocket.OPEN){
+                ws.send(document.getElementById('msg').value);
+            }else{
+                console.log('websocket is not available!')
+            }
+
         }
         function register() {
             var xmlhttp;
@@ -34,14 +39,21 @@
             }
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    console.log('success! register')
                     ws = new WebSocket("ws://localhost:8000/sensor/" + sensorId);
+                    ws.onopen=function(){
+                        console.log('register successed!')
+                    }
+                    
                     ws.onmessage = function (e) {
                         var content = document.getElementById("contents")
                         content.append("<p>" + e.data + "</p>");
                     }
+
+                    ws.onclose=function(e){
+                        console.log('websocket disconnected!!'+ e.code + ' ' + e.reason + ' ' + e.wasClean)
+                    }
                 }else{
-                    console.log('error!')
+                    console.log('error!'+xmlhttp.readyState+'status='+xmlhttp.status)
                 }
             }
             xmlhttp.open("GET", "/register/" + sensorId, true);
